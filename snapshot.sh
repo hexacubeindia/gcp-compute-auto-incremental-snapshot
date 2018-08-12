@@ -1,49 +1,37 @@
 #!/bin/bash
-
-####################### VARIABLES #######################
-#########################################################
-
-todayutc=$(date '+%Y-%m-%d')
-todayfile=$(date -d @$(( $(date +"%s") + 19800)) +"%Y-%m-%d-%H-%M")
-
-##################### VARIABLES ENDS ####################
-#########################################################
-
-#---------------------------------------------------------------------------------------------------------------------------#
-
+# Author: L. Anantha Raman
+# Script Name: Do Snapshot
+# Script Description: Take live snapshots of all disks under a project. Gcloud init should be run for default account and project before execution.
+# Company: hexacube India
+# Website: www.hexacube.in
+# Phone: +91 9003314466
+# Email: info@hexacube.in
+# Last Updated: 2018-08-12
+#
+# Snapshot Creation Starts
+#
+starttime=$(date -d @$(( $(date +"%s") + 19800)) +"%Y-%m-%d-%H-%M")
+echo "Snapshot Creation Process started on $starttime"
 echo " "
-echo "Snapshot backup process started at $todayfile"
-echo " "
-sleep 1
-
-#---------------------------------------------------------------------------------------------------------------------------#
-
-# loop through all disks within this project  and create a snapshot
+datetimestamp=$(date -d @$(( $(date +"%s") + 19800)) +"%Y-%m-%d---%H-%M-%S")
 gcloud compute disks list --format='value(name,zone)'| while read DISK_NAME ZONE; do
-  gcloud compute disks snapshot $DISK_NAME --snapshot-names snap-${DISK_NAME:0:31}-$todayfile --zone $ZONE
+  gcloud compute disks snapshot $DISK_NAME --snapshot-names ${DISK_NAME:0:31}---$datetimestamp --zone $ZONE
 done
 #
-# snapshots are incremental and dont need to be deleted, deleting snapshots will merge snapshots, so deleting doesn't loose anything
-# having too many snapshots is unwiedly so this script deletes them after 60 days
+# Snapshot Creation Ends
+# Old Snapshot Deletion Starts
 #
-if [[ $(uname) == "Linux" ]]; then
-  from_date=$(date -d "-60 days" "+%Y-%m-%d")
-else
-  from_date=$(date -v -60d "+%Y-%m-%d")
-fi
-gcloud compute snapshots list --filter="creationTimestamp<$from_date" --regexp "(autogcs.*)" --uri | while read SNAPSHOT_URI; do
-   gcloud compute snapshots delete $SNAPSHOT_URI
+gcloud compute snapshots list --filter="creationTimestamp<$(date -d "-31 days" "+%Y-%m-%d")" --uri | while read -r SNAPSHOT_URI; do
+   gcloud compute snapshots delete "$SNAPSHOT_URI" --quiet
 done
-#
-todayfileend=$(date -d @$(( $(date +"%s") + 19800)) +"%Y-%m-%d-%H-%M")
 echo " "
-echo "*****************************************************"
+endtime=$(date -d @$(( $(date +"%s") + 19800)) +"%Y-%m-%d-%H-%M")
+echo "Snapshot Creation Process completed on $endtime"
 echo " "
-echo "Snapshots List:"
+echo "List of available snapshots"
 echo " "
 gcloud compute snapshots list
 echo " "
-echo "*****************************************************"
-echo " "
-echo "Snapshot backup process completed at $todayfileend"
-echo " "
+#
+# Old Snapshot Deletion Ends
+#
