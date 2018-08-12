@@ -6,7 +6,7 @@
 # Website: www.hexacube.in
 # Phone: +91 9003314466
 # Email: info@hexacube.in
-# Last Updated: 2018-01-11
+# Last Updated: 2018-08-12
 #
 # Snapshot Creation Starts
 #
